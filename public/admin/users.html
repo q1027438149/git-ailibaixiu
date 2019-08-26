@@ -55,30 +55,30 @@
                         </div>
                         <div class="form-group">
                             <label>邮箱</label>
-                            <input class="form-control" type="email" placeholder="请输入邮箱">
+                            <input class="form-control" type="email" placeholder="请输入邮箱" name="email">
                         </div>
                         <div class="form-group">
                             <label>昵称</label>
-                            <input class="form-control" type="text" placeholder="请输入昵称">
+                            <input class="form-control" type="text" placeholder="请输入昵称" name="nickName">
                         </div>
                         <div class="form-group">
                             <label>密码</label>
-                            <input class="form-control" type="text" placeholder="请输入密码">
+                            <input class="form-control" type="text" placeholder="请输入密码" name="password">
                         </div>
                         <div class="form-group">
                             <div class="radio-inline">
-                                <label><input type="radio">未激活</label>
+                                <label><input type="radio" name="status" value="0">未激活</label>
                             </div>
                             <div class="radio-inline">
-                                <label><input type="radio">激活</label>
+                                <label><input type="radio" checked name="status" value="1">激活</label>
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="radio-inline">
-                                <label><input type="radio">超级管理员</label>
+                                <label><input type="radio" checked name="role" value="admin">超级管理员</label>
                             </div>
                             <div class="radio-inline">
-                                <label><input type="radio">普通用户</label>
+                                <label><input type="radio" name="role" value="normal">普通用户</label>
                             </div>
                         </div>
                         <div class="form-group">
@@ -104,7 +104,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <!-- <tr>
                                 <td class="text-center"><input type="checkbox"></td>
                                 <td class="text-center"><img class="avatar" src="../assets/img/default.png"></td>
                                 <td>coder@itcast.cn</td>
@@ -139,7 +139,7 @@
                                     <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
                                     <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
                                 </td>
-                            </tr>
+                            </tr> -->
                         </tbody>
                     </table>
                 </div>
@@ -186,9 +186,62 @@
 
     <script src="../assets/vendors/jquery/jquery.js"></script>
     <script src="../assets/vendors/bootstrap/js/bootstrap.js"></script>
+
+    <!-- 退出功能 -->
+    <script src="../assets/js/common.js"></script>
+
+    <script src="../assets/vendors/art-template/template-web.js"></script>
+    <!-- 用于显示用户信息列表的模板 -->
+    <script type="text/html" id="userTpl">
+        {{each list}}
+        <tr>
+            <td class="text-center"><input type="checkbox"></td>
+            <td class="text-center"><img class="avatar" src="../assets/img/default.png"></td>
+            <td>{{$value.email}}</td>
+            <td>{{$value.nickName}}</td>
+            <td>{{$value.status==1?'激活':'未激活'}}</td>
+            <td>{{$value.role == 'admin'?'超级用户':'普通用户'}}</td>
+            <td class="text-center">
+                <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
+                <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+            </td>
+        </tr>
+        {{/each}}
+
+    </script>
+
+
+    <script>
+        //定义一个数组
+        var userArr = [];
+        //发送Ajax
+        $.ajax({
+            type: 'get',
+            url: '/users',
+            success: function(res) {
+                // console.log(res);
+                //将res赋值给userArr
+                userArr = res;
+                render(userArr);
+            }
+        });
+        //定义render方法
+        function render(arr) {
+            var str = template('userTpl', {
+                list: arr
+            });
+            $('tbody').html(str);
+        }
+    </script>
+
+    <!-- 创建用户 -->
+    <script src="../assets/js/user.js"></script>
+
     <script>
         NProgress.done()
     </script>
+
+
 
 </body>
 
