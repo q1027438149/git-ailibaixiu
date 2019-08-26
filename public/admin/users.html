@@ -40,6 +40,7 @@
         <strong>错误！</strong>发生XXX错误
       </div> -->
             <div class="row">
+                <!-- 添加新用户 -->
                 <div class="col-md-4">
                     <form>
                         <h2>添加新用户</h2>
@@ -47,10 +48,12 @@
                             <label>头像</label>
                             <div class="form-group">
                                 <label class="form-image">
-                  <input id="avatar" type="file">
-                  <img src="../assets/img/default.png">
-                  <i class="mask fa fa-upload"></i>
-                </label>
+                                    <input id="avatar" type="file">
+                                    <img src="../assets/img/default.png" id="preview">
+                                    <i class="mask fa fa-upload"></i>
+                                </label>
+                                <!-- 隐藏域 -->
+                                <input type="hidden" name="avatar" id="hiddenAvatar">
                             </div>
                         </div>
                         <div class="form-group">
@@ -82,7 +85,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <button class="btn btn-primary" type="submit">添加</button>
+                            <button class="btn btn-primary" type="button" id="addUser">添加</button>
                         </div>
                     </form>
                 </div>
@@ -188,7 +191,23 @@
     <script src="../assets/vendors/bootstrap/js/bootstrap.js"></script>
 
     <!-- 退出功能 -->
-    <script src="../assets/js/common.js"></script>
+    <script type="text/javascript">
+        $('#logout').on('click', function() {
+            var isConfirm = confirm('您真的要退出吗?');
+            if (isConfirm) {
+                $.ajax({
+                    type: 'post',
+                    url: '/logout',
+                    success: function() {
+                        location.href = 'login.html';
+                    },
+                    error: function() {
+                        alert('退出失败');
+                    }
+                })
+            }
+        })
+    </script>
 
     <script src="../assets/vendors/art-template/template-web.js"></script>
     <!-- 用于显示用户信息列表的模板 -->
@@ -196,7 +215,7 @@
         {{each list}}
         <tr>
             <td class="text-center"><input type="checkbox"></td>
-            <td class="text-center"><img class="avatar" src="../assets/img/default.png"></td>
+            <td class="text-center"><img class="avatar" src="{{$value.avatar}}"></td>
             <td>{{$value.email}}</td>
             <td>{{$value.nickName}}</td>
             <td>{{$value.status==1?'激活':'未激活'}}</td>
@@ -225,6 +244,7 @@
                 render(userArr);
             }
         });
+
         //定义render方法
         function render(arr) {
             var str = template('userTpl', {
@@ -232,10 +252,45 @@
             });
             $('tbody').html(str);
         }
-    </script>
 
-    <!-- 创建用户 -->
-    <script src="../assets/js/user.js"></script>
+        //用户添加功能
+        $('#addUser').on('click', function() {
+            //收集表单数据
+            var formData = $('form').serialize();
+            console.log(formData);
+            //调用ajax
+            $.ajax({
+                type: 'post',
+                url: '/users',
+                data: formData,
+                success: function(res) {
+                    // console.log(res);
+                    //把res 给push到userArr这个数组中
+                    userArr.push(res);
+                    render(userArr);
+                }
+            })
+        });
+        //当用户选择文件时候
+        $('#avatar').on('change', function() {
+            // console.log(this.file[0]);
+            var formData = new FormData();
+            //第一个属性名,第二个是数据
+            formData.append('avatar', this.files[0]);
+            $.ajax({
+                type: 'post',
+                url: '/upload',
+                data: formData,
+                processData: false, // 告诉$.ajax方法不要解析请求参数
+                contentType: false, // 告诉$.ajax方法不要设置请求参数的类型
+                success: function(res) {
+                    console.log(res); //avatarName: "\uploads\upload_f0a534ddfcc9bc55e64585757c7cf1c5.jpeg"
+                    $('#preview').attr('src', res[0].avatar); // 实现头像预览功能
+                    $('#hiddenAvatar').val(res[0].avatar);
+                }
+            })
+        })
+    </script>
 
     <script>
         NProgress.done()
