@@ -56,6 +56,8 @@
                         <!-- show when image chose -->
                         <img class="help-block thumbnail" style="display: none">
                         <input id="feature" class="form-control" name="feature" type="file">
+                        <!-- 图片隐藏域 -->
+                        <input type="hidden" name="thumbnail" id="thumbnail">
                     </div>
                     <div class="form-group">
                         <label for="category">所属分类</label>
@@ -66,17 +68,17 @@
                     </div>
                     <div class="form-group">
                         <label for="created">发布时间</label>
-                        <input id="created" class="form-control" name="created" type="datetime-local">
+                        <input id="created" class="form-control" name="createAt" type="datetime-local">
                     </div>
                     <div class="form-group">
                         <label for="status">状态</label>
-                        <select id="status" class="form-control" name="status">
-              <option value="drafted">草稿</option>
-              <option value="published">已发布</option>
-            </select>
+                        <select id="status" class="form-control" name="state">
+                            <option value="0">草稿</option>
+                            <option value="1">已发布</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-primary" type="submit">保存</button>
+                        <button class="btn btn-primary" type="button" id="paBtn">保存</button>
                     </div>
                 </div>
             </form>
@@ -161,6 +163,38 @@
                 })
                 $('#category').append(html);
             }
+        })
+
+        //图片上传功能
+        $('#feature').on('change', function() {
+            //创建formData对象
+            var formData = new FormData();
+            //追加到formData对象中
+            formData.append('cover', this.files[0]);
+            $.ajax({
+                type: 'post',
+                url: '/upload',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    // console.log(res); cover: "\uploads\upload_cefd2c85bc7f3d8f49b3104ba5cd0922.jpg"
+                    //创建一个隐藏域,把图片的地址存进去
+                    $('#thumbnail').val(res[0].cover);
+                }
+            })
+        });
+
+        //添加文章功能
+        $('#paBtn').on('click', function() {
+            $.ajax({
+                type: 'post',
+                url: '/posts',
+                data: $('form').serialize(),
+                success: function() {
+                    location.href = 'posts.html'
+                }
+            })
         })
     </script>
 
