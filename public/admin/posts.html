@@ -70,7 +70,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
+                    <!-- <tr>
                         <td>随便一个名称</td>
                         <td>小小</td>
                         <td>潮科技</td>
@@ -80,29 +80,8 @@
                             <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
                             <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
                         </td>
-                    </tr>
-                    <tr>
-                        <td>随便一个名称</td>
-                        <td>小小</td>
-                        <td>潮科技</td>
-                        <td class="text-center">2016/10/07</td>
-                        <td class="text-center">已发布</td>
-                        <td class="text-center">
-                            <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
-                            <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>随便一个名称</td>
-                        <td>小小</td>
-                        <td>潮科技</td>
-                        <td class="text-center">2016/10/07</td>
-                        <td class="text-center">已发布</td>
-                        <td class="text-center">
-                            <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
-                            <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
-                        </td>
-                    </tr>
+                    </tr> -->
+
                 </tbody>
             </table>
         </div>
@@ -147,7 +126,27 @@
 
     <script src="../assets/vendors/jquery/jquery.js"></script>
     <script src="../assets/vendors/bootstrap/js/bootstrap.js"></script>
-    <script>
+    <script src="../assets/vendors/art-template/template-web.js"></script>
+    <!-- 显示所有文章 -->
+    <script type="text/html" id="pTpl">
+        {{each records}}
+        <tr>
+            <td>{{$value.title}}</td>
+            <td>{{$value.author.nickName}}</td>
+            <td>{{$value.category.title}}</td>
+            <!-- <td class="text-center">{{$value.createAt && $value.createAt.substr(0,10)}}</td> -->
+            <td class="text-center">{{dateFormat($value.createAt)}}</td>
+            <td class="text-center">{{$value.state == 1? '已发布':'草稿'}}</td>
+            <td class="text-center">
+                <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
+                <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+            </td>
+        </tr>
+        {{/each}}
+    </script>
+    <!-- 显示分页的模板 -->
+
+    <script type="text/javascript">
         //退出功能
         $('#logout').on('click', function() {
             var isConfirm = confirm('您真的要退出吗?');
@@ -164,6 +163,24 @@
                 })
             }
         })
+
+        //文章显示功能
+        template.defaults.imports.dateFormat = dateFormat;
+        $.ajax({
+            type: 'get',
+            url: '/posts',
+            success: function(res) {
+                console.log(res) //对象
+                var html = template('pTpl', res);
+                $('tbody').html(html);
+            }
+        })
+
+        function dateFormat(date) {
+            var nowDate = new Date(date);
+            var str = nowDate.getFullYear() + '-' + (nowDate.getMonth() + 1).toString().padStart(2, 0) + '-' + nowDate.getDate().toString().padStart(2, 0);
+            return str;
+        }
     </script>
     <script>
         NProgress.done()
