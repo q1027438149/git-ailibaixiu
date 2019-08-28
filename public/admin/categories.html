@@ -45,31 +45,34 @@
                         <h2>添加分类</h2>
                         <div class="form-group">
                             <label>名称</label>
-                            <input class="form-control" type="text" placeholder="请输入分类名称">
+                            <input class="form-control" type="text" placeholder="请输入分类名称" name="title">
                         </div>
                         <div class="form-group">
                             <label>图标</label>
-                            <input class="form-control" type="text" placeholder="请输入分类图标类名">
+                            <input class="form-control" type="text" placeholder="请输入分类图标类名" name="className">
                         </div>
                         <div class="form-group">
-                            <button class="btn btn-primary" type="submit">添加</button>
+                            <button class="btn btn-primary" type="button" id="caAdd">添加</button>
+                            <button class="btn btn-primary" type="button" id="caEdit" style="display:none">修改</button>
                         </div>
                     </form>
                 </div>
                 <div class="col-md-8">
-                    <!-- <div class="page-action">
-            <a class="btn btn-danger btn-sm" href="javascript:;">批量删除</a>
-          </div> -->
+                    <div class="page-action">
+                        <a class="btn btn-danger btn-sm" href="javascript:;" style="display:none" id="caAllDel">批量删除</a>
+                    </div>
                     <table class="table table-striped table-bordered table-hover">
                         <thead>
                             <tr>
+                                <!-- 全选复选框 -->
                                 <th class="text-center" width="40"><input type="checkbox"></th>
                                 <th>名称</th>
+                                <th>分类类名</th>
                                 <th class="text-center" width="100">操作</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <!-- <tr>
                                 <td class="text-center"><input type="checkbox"></td>
                                 <td>奇趣事</td>
                                 <td class="text-center">
@@ -92,7 +95,7 @@
                                     <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
                                     <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
                                 </td>
-                            </tr>
+                            </tr> -->
                         </tbody>
                     </table>
                 </div>
@@ -138,6 +141,196 @@
     </div>
     <script src="../assets/vendors/jquery/jquery.js"></script>
     <script src="../assets/vendors/bootstrap/js/bootstrap.js"></script>
+    <!-- 第一步 -->
+    <script src="../assets/vendors/art-template/template-web.js"></script>
+    <!-- 第二步 -->
+    <script type="text/html" id="caTpl">
+        {{each list}}
+        <tr>
+            <!-- 单个的复选框 -->
+            <td class="text-center"><input type="checkbox" data-id="{{$value._id}}"></td>
+            <td>{{$value.title}}</td>
+            <td>{{$value.className}}</td>
+            <td class="text-center" data-id="{{$value._id}}">
+                <a href="javascript:;" class="btn btn-info btn-xs edit">编辑</a>
+                <a href="javascript:;" class="btn btn-danger btn-xs delete">删除</a>
+            </td>
+        </tr>
+        {{/each}}
+    </script>
+
+
+
+    <script>
+        //退出功能
+        $('#logout').on('click', function() {
+            var isConfirm = confirm('您真的要退出吗?');
+            if (isConfirm) {
+                $.ajax({
+                    type: 'post',
+                    url: '/logout',
+                    success: function() {
+                        location.href = 'login.html';
+                    },
+                    error: function() {
+                        alert('退出失败');
+                    }
+                })
+            }
+        })
+
+        var caArr = [];
+        //发送ajax请求
+        $.ajax({
+            type: 'get',
+            url: '/categories',
+            success: function(res) {
+                caArr = res;
+                render(caArr);
+            }
+        });
+        //渲染
+        //定义render方法
+        function render(arr) {
+            var str = template('caTpl', {
+                list: arr
+            });
+            $('tbody').html(str);
+        }
+
+        //添加分类
+        $('#caAdd').on('click', function() {
+            $.ajax({
+                type: 'post',
+                url: '/categories',
+                data: $('form').serialize(), //收集表单
+                success: function(res) {
+                    caArr.push(res);
+                    render(caArr);
+                }
+            });
+            //初始化数据
+            $('input[name="title"]').val('');
+            $('input[name="className"]').val('');
+        });
+
+        // 编辑功能
+        var id;
+        $('tbody').on('click', '.edit', function() {
+            id = $(this).parent().attr('data-id');
+            $('form>h2').text('修改分类');
+            var trObj = $(this).parents('tr');
+            $('input[name="title"]').val(trObj.children().eq(1).text());
+            $('input[name="className"]').val(trObj.children().eq(2).text());
+
+            $('#caAdd').hide();
+            $('#caEdit').show();
+        })
+
+        //为编辑按钮添加点击事件
+        $('#caEdit').on('click', function() {
+            console.log(id);
+            $.ajax({
+                type: 'put',
+                url: '/categories/' + id,
+                data: $('form').serialize(),
+                success: function(res) {
+                    //找到修改内容的下标,给数组[index]重新赋值
+                    var index = caArr.findIndex(item => item._id == res._id);
+                    caArr[index] = res;
+                    render(caArr);
+                }
+            });
+            //初始化数据
+            $('input[name="title"]').val('');
+            $('input[name="className"]').val('');
+            $('#caAdd').show();
+            $('#caEdit').hide();
+        })
+
+        //单个删除
+        $('tbody').on('click', '.delete', function() {
+            if (confirm('您确定要删除吗?')) {
+                id = $(this).parent().attr('data-id');
+                $.ajax({
+                    type: 'delete',
+                    url: '/categories/' + id,
+                    success: function(res) {
+                        //找到下标,通过splice()删除
+                        var index = caArr.findIndex(item => item._id == res._id);
+                        caArr.splice(index, 1);
+                        render(caArr);
+                    }
+                })
+            }
+        })
+
+        //批量删除
+        //1.实现全选功能
+        $('thead input[type="checkbox"]').on('click', function() {
+            //获取全选按钮的状态
+            var flag = $(this).prop('checked'); //勾选为true,不勾选为false
+            $('tbody input[type="checkbox"]').prop('checked', flag);
+            //如果上面的复选勾选就让批量删除按钮显示
+            if (flag) {
+                $('#caAllDel').show();
+            } else {
+                $('#caAllDel').hide();
+            }
+
+        })
+
+        //2.实现复选框个数大于1时,批量删除按钮显示
+        $('tbody').on('click', 'input[type="checkbox"]', function() {
+            //下面复选框的总个数,以及被勾选的个数
+            var checkboxLength = $('tbody input[type="checkbox"]').length;
+            var checkedLength = $('tbody input[type="checkbox"]:checked').length;
+
+            //当下面复选框全部勾选时,全选按钮被勾选
+            if (checkedLength == checkboxLength) {
+                $('thead input[type="checkbox"]').prop('checked', true);
+            } else {
+                $('thead input[type="checkbox"]').prop('checked', false);
+            }
+
+            //判断复选框勾选的个数,当个数大于1时,显示批量删除按钮
+            if (checkedLength > 1) {
+                $('#caAllDel').show();
+            } else {
+                $('#caAllDel').hide();
+            }
+        })
+
+        //3.为批量删除按钮添加点击事件
+        $('#caAllDel').on('click', function() {
+            // var checkUser = $('tbody input:checked');
+            var checkUser = $('tbody input[type="checkbox"]:checked');
+            // console.log(checkUser); //jQuery对象
+
+            //获取勾选的id值
+            var ids = [];
+            checkUser.each(function(index, item) {
+                // console.log(item); //DOM对象
+                ids.push($(item).attr('data-id'));
+            })
+            $.ajax({
+                type: 'delete',
+                url: /categories/ + ids.join('-'),
+                success: function(res) {
+                    // console.log(res);返回的是数组
+                    res.forEach(value => {
+                        //遍历找到index下标
+                        var index = caArr.findIndex(item => item._id == value._id);
+                        caArr.splice(index, 1);
+                        render(caArr);
+                    });
+                }
+            })
+
+        })
+    </script>
+
+
     <script>
         NProgress.done()
     </script>
