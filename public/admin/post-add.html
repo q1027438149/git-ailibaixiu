@@ -54,10 +54,10 @@
                     <div class="form-group">
                         <label for="feature">特色图像</label>
                         <!-- show when image chose -->
-                        <img class="help-block thumbnail" style="display: none">
+                        <img class="help-block thumbnail" style="display: none" id="prev">
                         <input id="feature" class="form-control" name="feature" type="file">
                         <!-- 图片隐藏域 -->
-                        <input type="hidden" name="thumbnail" id="thumbnail">
+                        <input type="hidden" name="thumbnail" id="img">
                     </div>
                     <div class="form-group">
                         <label for="category">所属分类</label>
@@ -78,7 +78,8 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-primary" type="button" id="paBtn">保存</button>
+                        <button class="btn btn-primary" type="button" id="pAdd">保存</button>
+                        <button class="btn btn-primary" type="button" id="pEdit" style="display: none">编辑</button>
                     </div>
                 </div>
             </form>
@@ -170,7 +171,7 @@
             //创建formData对象
             var formData = new FormData();
             //追加到formData对象中
-            formData.append('cover', this.files[0]);
+            formData.append('avatar', this.files[0]);
             $.ajax({
                 type: 'post',
                 url: '/upload',
@@ -178,21 +179,96 @@
                 processData: false,
                 contentType: false,
                 success: function(res) {
-                    // console.log(res); cover: "\uploads\upload_cefd2c85bc7f3d8f49b3104ba5cd0922.jpg"
+                    // console.log(res); avatar: "\uploads\upload_cefd2c85bc7f3d8f49b3104ba5cd0922.jpg"
                     //创建一个隐藏域,把图片的地址存进去
-                    $('#thumbnail').val(res[0].cover);
+                    $('#img').val(res[0].avatar);
+                    $('#prev').show().attr('src', res[0].avatar);
                 }
             })
         });
 
         //添加文章功能
-        $('#paBtn').on('click', function() {
+        $('#pAdd').on('click', function() {
             $.ajax({
                 type: 'post',
                 url: '/posts',
                 data: $('form').serialize(),
                 success: function() {
                     location.href = 'posts.html'
+                }
+            })
+        })
+
+        var id = getUrlParams('id');
+        // console.log(getUrlParams('id'));
+
+        if (id != -1) {
+            //根据获取文章详情
+            $.ajax({
+                type: 'put',
+                url: '/posts/' + id,
+                success: function(res) {
+                    console.log(res);
+                    $('#title').val(res.title);
+                    $('#content').val(res.content);
+                    $('h1').text('编辑文章');
+                    //预览图片
+                    $('#prev').show().attr('src', res.thumbnail);
+                    $('#img').val(res.thumbnail);
+
+                    //将对应的分类显示出来
+                    $('#category>option').each((index, item) => {
+                        //判断option里面的value属性的值与res.category的值是否相等,如果相等,就表示是这分类,给其数组一个
+                        // console.log(item);
+                        if ($(item).attr('value') == res.category) {
+                            $(item).prop('selected', true)
+                        }
+                    });
+
+                    //显示状态
+                    $('#status > option').each((index, item) => {
+                        // console.log(item);
+                        if ($(item).attr('value') == res.state) {
+                            $(item).prop('selected', true)
+                        }
+                    })
+
+                    //显示时间
+                    // $('#created').val(res.createAt.substr(0, 16))
+                    //res.createAt显示的是2019-08-28T14:58:00.000Z,要求格式yyyy-MM-ddThh:mm
+                    $('#created').val(res.createAt && res.createAt.substr(0, 16));
+
+                    //将保存按钮隐藏,将编辑按钮显示出来
+                    $('#pAdd').hide();
+                    $('#pEdit').show();
+                }
+            })
+        }
+
+        //如果携带?id参数,就表示是修改文章页面,没有就是添加文章页面
+        //从浏览器的地址栏中获取查询参数
+        function getUrlParams(name) {
+            // console.log(localtion.search.substr(1).split('&'));
+            var paramsAry = location.search.substr(1).split('&');
+            for (var i = 0; i < paramsAry.length; i++) {
+                // console.log(paramsAry[i].split('='));
+                var tmp = paramsAry[i].split('=');
+                if (tmp[0] == name) {
+                    return tmp[1];
+                }
+            }
+            return -1; //没有找到就返回-1
+        }
+
+        //给编辑按钮注册点击事件
+        $('#pEdit').on('click', function() {
+            $.ajax({
+                type: 'put',
+                url: '/posts/' + id,
+                data: $('form').serialize(),
+                success: function(res) {
+                    // if(typeof res == 'object')
+                    location.href = 'posts.html';
                 }
             })
         })

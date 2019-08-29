@@ -138,8 +138,8 @@
             <td class="text-center">{{dateFormat($value.createAt)}}</td>
             <td class="text-center">{{$value.state == 1? '已发布':'草稿'}}</td>
             <td class="text-center">
-                <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
-                <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+                <a href="post-add.html?id={{$value._id}}" class="btn btn-default btn-xs">编辑</a>
+                <a href="javascript:;" class="btn btn-danger btn-xs delete" data-id="{{$value._id}}">删除</a>
             </td>
         </tr>
         {{/each}}
@@ -202,6 +202,7 @@
                 },
                 success: function(res) {
                     // console.log(res) //对象
+                    window.currentPage = res.page;
                     var contentStr = template('pTpl', res);
                     $('tbody').html(contentStr);
 
@@ -212,7 +213,6 @@
             });
         };
         render();
-
 
         //时间函数
         function dateFormat(date) {
@@ -260,6 +260,34 @@
             var categoryValue = $('#category').val();
             var stateValue = $('#state').val();
             render(categoryValue, stateValue);
+        })
+
+        //删除功能
+        $('tbody').on('click', '.delete', function() {
+            if (confirm('您真的要进行删除操作吗?')) {
+                var id = $(this).attr('data-id');
+                $.ajax({
+                    type: 'delete',
+                    url: '/posts/' + id,
+                    success: function() {
+                        //如果删除完成,我们需要调用render方法
+                        //当完成删除功能是,一个让他显示在被删除的那个页面
+
+                        if ($('tbody').children().length == 1) {
+                            if (currentPage = 1) {
+                                //如果当前页已经是第一页,我们就让它在这一页
+                                render(categoryValue, stateValue, currentPage);
+                            } else {
+                                //如果tr=1,再点击需呀回到上一页
+                                render(categoryValue, stateValue, currentPage - 1);
+                            }
+                        } else {
+                            render(categoryValue, stateValue, currentPage);
+                        }
+                        // console.log(currentPage);
+                    }
+                })
+            }
         })
     </script>
     <script>
