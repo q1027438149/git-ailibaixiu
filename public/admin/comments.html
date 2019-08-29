@@ -167,28 +167,28 @@
             url: '/comments',
             success: function(res) {
                 console.log(res);
-                render(res);
-                // //获取评论列表数据
-                // var html = template('commentsTpl', res);
-                // $('tbody').html(html);
+                // render(res);
+                //获取评论列表数据
+                var html = template('commentsTpl', res);
+                $('tbody').html(html);
 
-                // //获取分页数据
-                // var pageHTML = template('pageTpl', res);
-                // $('#pageBox').html(pageHTML);
+                //获取分页数据
+                var pageHTML = template('pageTpl', res);
+                $('#pageBox').html(pageHTML);
             }
         })
 
 
         //定义render方法
-        function render(res) {
-            //获取评论列表数据
-            var html = template('commentsTpl', res);
-            $('tbody').html(html);
+        // function render(res) {
+        //     //获取评论列表数据
+        //     var html = template('commentsTpl', res);
+        //     $('tbody').html(html);
 
-            //获取分页数据
-            var pageHTML = template('pageTpl', res);
-            $('#pageBox').html(pageHTML);
-        }
+        //     //获取分页数据
+        //     var pageHTML = template('pageTpl', res);
+        //     $('#pageBox').html(pageHTML);
+        // }
 
         //时间函数
         function dateFormat(date) {
@@ -229,7 +229,8 @@
                     state: status == 0 ? 1 : 0
                 },
                 success: function() {
-                    render(res);
+                    // render(res);
+                    location.reload();
                 }
             })
         })
@@ -242,7 +243,8 @@
                     type: 'delete',
                     url: '/comments/' + id,
                     success: function(res) {
-                        render(res);
+                        // render(res);
+                        location.reload();
                     }
                 })
             }
